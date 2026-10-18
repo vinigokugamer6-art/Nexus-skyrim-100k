@@ -1,0 +1,40 @@
+
+name: Coletar mods Nexus
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  coleta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install requests
+
+      - name: Executar coletor
+        env:
+          NEXUS_API_KEY: ${{ secrets.NEXUS_API_KEY }}
+        run: python coletor.py
+
+      - name: Salvar resultados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add resultados/ || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Atualizar catalogo de mods"
+            git push
+          fi
